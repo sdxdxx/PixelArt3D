@@ -1,0 +1,139 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6367424004658213922
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9e39aaea9e20d844917684fb990679f, type: 3}
+  m_Name: PixelizeBackgroundVolume
+  m_EditorClassIdentifier: 
+  active: 0
+  ColorChange:
+    m_OverrideState: 1
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
+  DownSampleValues:
+    m_OverrideState: 1
+    m_Value: 2
+--- !u!114 &-1597893765548415535
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 378e6c67bcaed4755a3311744323333a, type: 3}
+  m_Name: ScreenSpaceReflectionVolume
+  m_EditorClassIdentifier: 
+  active: 1
+  EnableReflection:
+    m_OverrideState: 1
+    m_Value: 1
+  ShowReflectionTexture:
+    m_OverrideState: 1
+    m_Value: 0
+  ColorChange:
+    m_OverrideState: 1
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
+  MaxStepLength:
+    m_OverrideState: 1
+    m_Value: 0.3
+  MinDistance:
+    m_OverrideState: 1
+    m_Value: 0.03
+  DitherIntensity:
+    m_OverrideState: 1
+    m_Value: 1
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7fd9488000d3734a9e00ee676215985, type: 3}
+  m_Name: Global Volume Water Profile
+  m_EditorClassIdentifier: 
+  components:
+  - {fileID: -1597893765548415535}
+  - {fileID: -6367424004658213922}
+--- !u!114 &5363497732543142071
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff724528b3001cb42bbe0e3b1a6d93c8, type: 3}
+  m_Name: WaterVolume
+  m_EditorClassIdentifier: 
+  active: 1
+  EnableEffect:
+    m_OverrideState: 1
+    m_Value: 1
+  UnderWaterDeepColor:
+    m_OverrideState: 1
+    m_Value: {r: 0.078431375, g: 0.20784315, b: 0.2627451, a: 1}
+  UnderWaterShallowColor:
+    m_OverrideState: 1
+    m_Value: {r: 0.121568635, g: 0.37254903, b: 0.3372549, a: 1}
+  DistorationNoise:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: 7345afede3c4c97479ad9606f0dc6ecc, type: 3}
+    dimension: 1
+  DistorationNoise_Tilling:
+    m_OverrideState: 1
+    m_Value: {x: 0.5, y: 0.5}
+  DistorationIntensity:
+    m_OverrideState: 1
+    m_Value: 0.034
+  DistorationSpeed:
+    m_OverrideState: 1
+    m_Value: 0.5
+  CausticsTexture:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: 714e2248e936aa64fb0501832f694796, type: 3}
+    dimension: 1
+  CausticsTextureScale:
+    m_OverrideState: 1
+    m_Value: 5.7
+  CausiticsSpeed:
+    m_OverrideState: 1
+    m_Value: 1
+  CausiticsIntensity:
+    m_OverrideState: 1
+    m_Value: 0.17
+  WaveA:
+    m_OverrideState: 1
+    m_Value: {x: 0.2, y: 0, z: 0.1, w: 2}
+  WaveB:
+    m_OverrideState: 1
+    m_Value: {x: 0, y: 0.2, z: 0.05, w: 2}
+  WaveC:
+    m_OverrideState: 1
+    m_Value: {x: 0.2, y: 0.2, z: 0.1, w: 2}
+  WaveInt:
+    m_OverrideState: 1
+    m_Value: 0.6
+  WaterLineWidth:
+    m_OverrideState: 1
+    m_Value: 1.85
+  WaterLineSmooth:
+    m_OverrideState: 1
+    m_Value: 0.102
+  WaterLineOffset:
+    m_OverrideState: 1
+    m_Value: 0
+  WaterLineColor:
+    m_OverrideState: 1
+    m_Value: {r: 0, g: 0.08235294, b: 0.07058824, a: 1}

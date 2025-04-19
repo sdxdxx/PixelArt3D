@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf0f2278f580b4f4db1ad36610a28258, type: 3}
+  m_Name: steppedAnimation
+  m_EditorClassIdentifier: 
+  SourceClips:
+  - {fileID: 7400000, guid: e478120230627b840b6d1d9db23dc3ea, type: 2}
+  FixRotationInterpolations: 1
+  KeyframeMode: 3
+  KeyframeRate: 10
+  ManualKeyframeTimes: []
+  ManualKeyframes: []
+  SampleRate: 30
+  FixedTimeDelay: 0.1
