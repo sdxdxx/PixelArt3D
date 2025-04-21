@@ -18,7 +18,7 @@ Shader "URP/PostProcessing/GodRay"
         
         HLSLINCLUDE
         #define MAIN_LIGHT_CALCULATE_SHADOWS  //定义阴影采样
-            #define _MAIN_LIGHT_SHADOWS_CASCADE //启用级联阴影
+        #define _MAIN_LIGHT_SHADOWS_CASCADE //启用级联阴影
             
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
@@ -47,12 +47,24 @@ Shader "URP/PostProcessing/GodRay"
             //----------变量声明结束-----------
             CBUFFER_END
 
-            float3 ReconstructWorldPositionFromDepth(float2 screenPos, float depth)
+            float3 ReconstructWorldPositionFromDepth(float2 screenPos, float rawDepth)
             {
-                float2 ndcPos = screenPos*2-1;
-                float3 clipPos = float3(ndcPos.x,ndcPos.y,1)*_ProjectionParams.z;// z = far plane = mvp result w
-                float3 viewPos = mul(unity_CameraInvProjection,clipPos.xyzz).xyz * depth;
-                float3 worldPos = mul(UNITY_MATRIX_I_V,float4(viewPos,1)).xyz;
+                float2 ndcPos = screenPos*2-1;//map[0,1] -> [-1,1]
+            	float3 worldPos;
+                if (unity_OrthoParams.w)
+                {
+					float depth01 = 1-rawDepth;
+                	float3 viewPos = float3(unity_OrthoParams.xy * ndcPos.xy, 0);
+                	viewPos.z = -lerp(_ProjectionParams.y, _ProjectionParams.z, depth01);
+                	worldPos = mul(UNITY_MATRIX_I_V, float4(viewPos, 1)).xyz;
+                }
+                else
+                {
+	                float depth01 = Linear01Depth(rawDepth,_ZBufferParams);
+                	float3 clipPos = float3(ndcPos.x,ndcPos.y,1)*_ProjectionParams.z;// z = far plane = mvp result w
+	                float3 viewPos = mul(unity_CameraInvProjection,clipPos.xyzz).xyz * depth01;
+	                worldPos = mul(UNITY_MATRIX_I_V,float4(viewPos,1)).xyz;
+                }
                 return worldPos;
             }
 
@@ -82,11 +94,11 @@ Shader "URP/PostProcessing/GodRay"
             half4 frag_GodRayRange (Varyings i) : SV_TARGET
             {
                 float rawDepth = SAMPLE_TEXTURE2D(_CameraDepthTexture,sampler_CameraDepthTexture,i.texcoord).r;
-                float linear01Depth = Linear01Depth(rawDepth,_ZBufferParams);
-                float3 posWS_frag = ReconstructWorldPositionFromDepth(i.texcoord, linear01Depth);
+                float3 posWS_frag = ReconstructWorldPositionFromDepth(i.texcoord, rawDepth);
                 
                 float3 startPos = _WorldSpaceCameraPos; //摄像机上的世界坐标
                 float3 vDir = normalize(posWS_frag - startPos); //视线方向
+                
                 float3 lDir = _MainLightPosition.xyz; //视线方向
                 float rayLength = length(posWS_frag - startPos); //视线长度
                 rayLength = min(rayLength, MAX_RAY_LENGTH); //限制最大步进长度，MAX_RAY_LENGTH这里设置为20

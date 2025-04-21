@@ -2,7 +2,7 @@ Shader "URP/Cartoon/PixelizeObject2"
 {
     Properties
     {
-        [Header(Tint)]
+       [Header(Tint)]
         _BaseColor("Base Color",Color) = (1.0,1.0,1.0,1.0)
         
         _MainTex("MainTex",2D) = "white"{}
@@ -12,25 +12,18 @@ Shader "URP/Cartoon/PixelizeObject2"
         _MatCapLerp("MatCapLerp",Range(0,1)) = 1
         
          [Header(Diffuse)]
-        _RangeDark("Range Dark",Range(0,1)) = 0.3
-        _SmoothDark("Smooth Dark",Range(0,0.2)) = 0
-        _RangeLight("Range Light",Range(0,1)) = 0.7
-        _SmoothLight("Smooth Light",Range(0,0.2)) = 0
-        _LightColor("Light Color",Color) = (1,1,1,1)
-        _GreyColor("Grey Color",Color) = (0.5,0.5,0.5,1)
-        _DarkColor("Dark Color",Color) = (0,0,0,1)
-        
-        [Header(Specular)]
-        _SpecularIntensity("Specular Intensity",Range(0,1)) = 1
-        _SpecularPow("Specular Power",Range(0.1,200)) = 50
-        _SpecularColor("Specular Color",Color) = (1,1,1,1)
-        _RangeSpecular("Range Specular",Range(0,1)) = 0.9
-        _SmoothSpecular("Smooth Specular",Range(0,0.2)) = 0
-        
+        _SmoothValue("Smooth Value",Range(0,0.1)) = 0
+       
         [Header(Outline)]
         _OutlineColor("Outline Color",Color) = (0.0,0.0,0.0,0.0)
-        _OutlineWidth("Outline Width",Range(0,5)) = 1
+        _OutlineWidth("Outline Width",Range(0,5)) = 0
     	[IntRange]_ID("Mask ID", Range(0,254)) = 100
+    	
+    	[Header(NormalLine)]
+    	[Toggle(_EnableNormalInline)] _EnableNormalInline("Enable Normal Inline",float) = 0
+        _NormalInlineColor("Normal Inline Color",Color) = (1.0,1.0,1.0,1.0)
+    	[Toggle(_EnableNormalOutline)] _EnableNormalOutline("Enable Normal Outline",float) = 0
+        _NormalOutlineColor("Normal Outline Color",Color) = (1.0,1.0,1.0,1.0)
     	
     	[Header(DownSample)]
     	[IntRange]_DownSampleValue("Down Sample Value",Range(0,5)) = 0
@@ -43,7 +36,7 @@ Shader "URP/Cartoon/PixelizeObject2"
         {
             "RenderType" = "Opaque"
             "RenderPipeline" = "UniversalPipeline"
-        	"Queue" = "Transparent+100"
+        	"Queue" = "Geometry"
         }
          
          HLSLINCLUDE
@@ -52,40 +45,33 @@ Shader "URP/Cartoon/PixelizeObject2"
         #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
 
          #pragma shader_feature _EnableObjectCenterPoint
+         #pragma shader_feature _EnableNormalInline
+        #pragma shader_feature _EnableNormalOutline
          
          CBUFFER_START(UnityPerMaterial)
             //----------变量声明开始-----------
             half4 _BaseColor;
-            half4 _LightColor;
-            half4 _GreyColor;
-            half4 _DarkColor;
-            float _RangeDark;
-            float _RangeLight;
-            float _SmoothDark;
-            float _SmoothLight;
+            float _SmoothValue;
             float _MatCapLerp;
             float4 _MainTex_ST;
-
-            float _SpecularIntensity;
-            float _SpecularPow;
-            half4 _SpecularColor;
-            float _RangeSpecular;
-            float _SmoothSpecular;
 
 			int _DownSampleValue;
 
 			float _OutlineWidth;
 
+			half4 _NormalInlineColor;
+            half4 _NormalOutlineColor;
+
 			int _ID;
             //----------变量声明结束-----------
             CBUFFER_END
-
-         TEXTURE2D(_CameraDepthTexture);
+         
          TEXTURE2D(_m_CameraDepthTexture);
-		 SAMPLER(sampler_CameraDepthTexture);
+
+         TEXTURE2D(_NormalLineTexture);
+         SAMPLER(sampler_NormalLineTexture);
          
          TEXTURE2D(_PixelizeObjectMask);
-         
          TEXTURE2D(_PixelizeObjectCartoonTex);
 
         //Remap
@@ -390,18 +376,19 @@ Shader "URP/Cartoon/PixelizeObject2"
                 return o;
             }
 
-            float CalculateDiffuseLightResult(float3 nDir, float3 lDir, float lightRadience, float shadow)
+             float CalculateDiffuseLightResult(float3 nDir, float3 lDir, float lightRadience, float shadow)
             {
                 float nDotl = dot(nDir,lDir);
                 float lambert = max(0,nDotl);
                 float halfLambert = nDotl*0.5+0.5;
-                half3 result = lambert*shadow*lightRadience;
+                half3 result = halfLambert*shadow*lightRadience;
                 return result;
             }
             
             half4 frag (vertexOutput i) : SV_TARGET
             {
             	
+                float2 screenPos = i.screenPos.xy/i.screenPos.w;
                 float4 shadowCoord = TransformWorldToShadowCoord(i.posWS);
                 Light mainLight = GetMainLight(shadowCoord);
                 float3 nDir= i.nDirWS;
@@ -433,16 +420,41 @@ Shader "URP/Cartoon/PixelizeObject2"
 				}
 
                 float diffuse = mainDiffuse+additionalDiffuse;
-                float diffuseDarkMask = 1-smoothstep(_RangeDark-_SmoothDark,_RangeDark,diffuse);//暗部
-                float diffuseLightMask = smoothstep(_RangeLight-_SmoothLight,_RangeLight,diffuse);//亮部
-                float diffuseGreyMask = 1-diffuseDarkMask-diffuseLightMask;//中部
+                float mask1 = 1-smoothstep(0.2-_SmoothValue,0.2,diffuse);
+                float mask2 = 1-smoothstep(0.41-_SmoothValue,0.41,diffuse);
+                float mask3 = 1-smoothstep(0.624-_SmoothValue,0.624,diffuse);
+                float mask4 = 1-smoothstep(0.823-_SmoothValue,0.823,diffuse);
+                float mask5 = 1-smoothstep(0.965-_SmoothValue,0.965,diffuse);
+                float mask6 = 1 - mask5;
+                mask2 = mask2 -mask1;
+                mask3 = mask3 -mask2-mask1;
+                mask4 = mask4 -mask3 - mask2 -mask1;
+                mask5 = mask5 - mask4 -mask3 - mask2 -mask1;
                 
-                half3 Diffuse = albedo*(_DarkColor*diffuseDarkMask+diffuseGreyMask*_GreyColor+_LightColor*diffuseLightMask);
-            	half3 Specular = _SpecularIntensity*pow(max(0,dot(nDir,hDir)),_SpecularPow);
-                Specular = smoothstep(_RangeSpecular-_SmoothSpecular,_RangeSpecular,Specular)*_SpecularColor;
                 
+                half3 diffuseColor1 = _BaseColor*albedo*mask1*half3(0.2829f,0.2976f,0.3584f);
+                half3 diffuseColor2 = _BaseColor*albedo*mask2*half3(0.4024f,0.4244f,0.4811f);
+                half3 diffuseColor3 = _BaseColor*albedo*mask3*half3(0.4396f,0.4660f,0.5377f);
+                half3 diffuseColor4 = _BaseColor*albedo*mask4*half3(0.6031f,0.6451f,0.7641f);
+                half3 diffuseColor5 = _BaseColor*albedo*mask5*half3(0.6776f,0.7272f,0.8584f);
+                half3 diffuseColor6 = _BaseColor*albedo*mask6;
+                half3 Diffuse = diffuseColor1+diffuseColor2+diffuseColor3+diffuseColor4+diffuseColor5+diffuseColor6;
+
+                
+                //NormalLine
+                float3 normalLine = SAMPLE_TEXTURE2D(_NormalLineTexture,sampler_NormalLineTexture,screenPos);
+                half3 normalInline = normalLine.r * _NormalInlineColor.rgb*_NormalInlineColor.a;
+                half3 normalOutline = normalLine.b * _NormalOutlineColor.rgb*_NormalOutlineColor.a;
                 half3 FinalRGB = lerp(1,matcap,_MatCapLerp)*Diffuse;//Matcap+Diffuse
-                FinalRGB = saturate(FinalRGB+Specular);//添加高光
+                
+                #ifdef _EnableNormalInline
+                    FinalRGB+= normalInline;
+                #endif
+                
+                #ifdef _EnableNormalOutline
+                    FinalRGB += normalOutline;
+                #endif
+                
                 return half4(FinalRGB,1.0);
             }
             

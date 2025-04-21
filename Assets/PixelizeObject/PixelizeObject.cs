@@ -11,8 +11,8 @@ public class PixelizeObject : ScriptableRendererFeature
     {
         public LayerMask layerMask;
     }
-    private static readonly RenderPassEvent pixelizeObjectMaskPassEvent = RenderPassEvent.BeforeRenderingPrePasses;
-    private static readonly RenderPassEvent pixelizeObjectClearCartoonRenderPassEvent = RenderPassEvent.BeforeRenderingPrePasses;
+    private static readonly RenderPassEvent pixelizeObjectMaskPassEvent = RenderPassEvent.BeforeRenderingOpaques;
+    private static readonly RenderPassEvent pixelizeObjectClearCartoonRenderPassEvent = RenderPassEvent.BeforeRenderingOpaques;
      
      
     //PixelizeObjectMaskPass
@@ -85,7 +85,6 @@ public class PixelizeObject : ScriptableRendererFeature
         //执行传递。这是自定义渲染发生的地方
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            
             CommandBuffer cmd = CommandBufferPool.Get(ProfilerTag);//获得一个为ProfilerTag的CommandBuffer
             
             //性能分析器(自带隐式垃圾回收),之后可以在FrameDebugger中查看
@@ -226,7 +225,7 @@ public class PixelizeObject : ScriptableRendererFeature
         }
     }
     
-    //PixelizeObjectCartoonPass_EditorMode
+    //PixelizeObjectCartoonOutlinePass_EditorMode
     class PixelizeObjectCartoonForDebugPass_EditorMode : ScriptableRenderPass
     {
         private RenderingData renderingData;
@@ -234,8 +233,8 @@ public class PixelizeObject : ScriptableRendererFeature
         private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         
         //定义一个 ProfilingSampler 方便设置在FrameDebugger里查看
-        private const string ProfilerTag = "PixelizeObjectCartoonPass";
-        private ProfilingSampler m_ProfilingSampler = new("PixelizeObjectCartoonPass");
+        private const string ProfilerTag = "PixelizeObjectCartoonPass_EditorMode";
+        private ProfilingSampler m_ProfilingSampler = new("PixelizeObjectCartoonPass_EditorMode");
         
 
         private RTHandle cameraColorRTHandle;
@@ -246,7 +245,7 @@ public class PixelizeObject : ScriptableRendererFeature
         public PixelizeObjectCartoonForDebugPass_EditorMode(Settings settings)
         {
             filtering = new FilteringSettings(RenderQueueRange.all);//设置过滤器
-            shaderTagsList.Add(new ShaderTagId("PixelizeObjectCartoonPass"));
+            //shaderTagsList.Add(new ShaderTagId("PixelizeObjectCartoonPass"));
             shaderTagsList.Add(new ShaderTagId("PixelizeObjectOutlinePass"));
             renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
         }
@@ -294,10 +293,10 @@ public class PixelizeObject : ScriptableRendererFeature
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
 
-            if (this.renderingData.cameraData.cameraType == CameraType.Game)
-            {
-                return;
-            }
+             if (this.renderingData.cameraData.cameraType == CameraType.Game)
+             {
+                 return;
+             }
             
             CommandBuffer cmd = CommandBufferPool.Get(ProfilerTag);//获得一个为ProfilerTag的CommandBuffer
             
@@ -348,9 +347,9 @@ public class PixelizeObject : ScriptableRendererFeature
     //每帧调用,将pass添加进流程
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
+        renderer.EnqueuePass(pixelizeObjectCartoonPass_EditorMode);
         renderer.EnqueuePass(pixelizeObjectMaskPass);
         renderer.EnqueuePass(pixelizeObjectCartoonPass);
-        renderer.EnqueuePass(pixelizeObjectCartoonPass_EditorMode);
     }
 
     //每帧调用,渲染目标初始化后的回调。这允许在创建并准备好目标后从渲染器访问目标

@@ -1,4 +1,4 @@
-Shader "URP/Cartoon/PixelizeObject2"
+Shader "URP/Cartoon/PixelizeObject"
 {
     Properties
     {

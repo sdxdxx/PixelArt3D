@@ -97,11 +97,13 @@ Material:
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
+    - _DownSampleValue: 4
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnableFrameTexture: 0
     - _EnableNormalInline: 1
     - _EnableNormalOutline: 0
+    - _EnableObjectCenterPoint: 0
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
     - _Glossiness: 0

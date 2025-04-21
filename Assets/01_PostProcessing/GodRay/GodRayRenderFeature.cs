@@ -8,14 +8,11 @@ public class GodRayRenderFeature : ScriptableRendererFeature
      public class Settings
     {
         public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
-        public Shader shader;
     }
      
      //自定义的Pass
     class CustomRenderPass : ScriptableRenderPass
     {
-        private RenderingData renderingData;
-        
         //定义一个 ProfilingSampler 方便设置在FrameDebugger里查看
         private const string ProfilerTag = "GodRay";
         private ProfilingSampler m_ProfilingSampler = new(ProfilerTag);
@@ -24,13 +21,15 @@ public class GodRayRenderFeature : ScriptableRendererFeature
         private GodRayVolume godRayVolume;
 
         private RTHandle cameraColorRTHandle;//可以理解为GameView_RenderTarget的句柄
+        private RTHandle tempRTHandle00;
         private RTHandle tempRTHandle01;
         private RTHandle tempRTHandle02;
 
         //自定义Pass的构造函数(用于传参)
-        public CustomRenderPass(RenderPassEvent evt, Shader shader)
+        public CustomRenderPass(Settings settings)
         {
-            renderPassEvent = evt; //传入设置的渲染事件顺序(renderPassEvent在基类ScriptableRenderPass中)
+            renderPassEvent = settings.renderPassEvent; //传入设置的渲染事件顺序(renderPassEvent在基类ScriptableRenderPass中)
+            Shader shader = Shader.Find("URP/PostProcessing/GodRay");
             material = CoreUtils.CreateEngineMaterial(shader);//根据传入的Shader创建material;
         }
 
@@ -43,17 +42,21 @@ public class GodRayRenderFeature : ScriptableRendererFeature
             RenderingUtils.ReAllocateIfNeeded(ref temp, desc);//使用该函数申请一张与相机大小一致的TempRT;
         }
 
-        public void Setup(RTHandle cameraColor, RenderingData data)
+        public void Setup(RTHandle cameraColor)
         {
             cameraColorRTHandle = cameraColor;
-            renderingData = data;
         }
         
         //此方法由渲染器在渲染相机之前调用
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
+            var stack = VolumeManager.instance.stack;//获取Volume的栈
+            godRayVolume = stack.GetComponent<GodRayVolume>();//从栈中获取到ColorTintVolume
+            GetTempRT(ref tempRTHandle01,renderingData,godRayVolume.DownSample.value);
+            GetTempRT(ref tempRTHandle02,renderingData,godRayVolume.DownSample.value);
+            GetTempRT(ref tempRTHandle00,renderingData,1);
             ConfigureInput(ScriptableRenderPassInput.Color); //确认传入的参数类型为Color
-            ConfigureTarget(cameraColorRTHandle);//确认传入的目标为cameraColorRT
+            ConfigureTarget(tempRTHandle01);//确认传入的目标为cameraColorRT
             
         }
         
@@ -70,18 +73,18 @@ public class GodRayRenderFeature : ScriptableRendererFeature
             material.SetFloat("_Scattering",godRayVolume.Scattering.value);
             material.SetFloat("_RandomNumber",godRayVolume.RandomNumber.value);
             material.SetFloat("_BlurRange",godRayVolume.BlurRange.value);
-
+            
             if (godRayVolume.EnableEffect.value)
             {
                 //性能分析器(自带隐式垃圾回收),之后可以在FrameDebugger中查看
                 using (new ProfilingScope(cmd, m_ProfilingSampler))
                 {
-                    GetTempRT(ref tempRTHandle01,this.renderingData,godRayVolume.DownSample.value);
-                    GetTempRT(ref tempRTHandle02,this.renderingData,godRayVolume.DownSample.value);
-                    Blitter.BlitCameraTexture(cmd,tempRTHandle01,tempRTHandle01,material,0);
+                    
+                    Blitter.BlitCameraTexture(cmd,cameraColorRTHandle,tempRTHandle01,material,0);
                     Blitter.BlitCameraTexture(cmd,tempRTHandle01,tempRTHandle02,material,1);
                     material.SetTexture("_GodRayRangeTexture",tempRTHandle02);
-                    Blitter.BlitCameraTexture(cmd,cameraColorRTHandle,cameraColorRTHandle,material,2);//写入渲染命令进CommandBuffer
+                    Blitter.BlitCameraTexture(cmd, cameraColorRTHandle, tempRTHandle00);//写入渲染命令进CommandBuffer
+                    Blitter.BlitCameraTexture(cmd,tempRTHandle00,cameraColorRTHandle,material,2);//写入渲染命令进CommandBuffer
                 }
             }
             
@@ -100,6 +103,7 @@ public class GodRayRenderFeature : ScriptableRendererFeature
         {
             tempRTHandle01?.Release();//如果tempRTHandle没被释放的话，会被释放
             tempRTHandle02?.Release();
+            tempRTHandle00?.Release();
         }
     }
 
@@ -110,7 +114,7 @@ public class GodRayRenderFeature : ScriptableRendererFeature
     //初始化时调用
     public override void Create()
     {
-        m_ScriptablePass = new CustomRenderPass(settings.renderPassEvent,settings.shader);
+        m_ScriptablePass = new CustomRenderPass(settings);
     }
     
     //每帧调用,将pass添加进流程
@@ -122,7 +126,7 @@ public class GodRayRenderFeature : ScriptableRendererFeature
     //每帧调用,渲染目标初始化后的回调。这允许在创建并准备好目标后从渲染器访问目标
     public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
     {
-        m_ScriptablePass.Setup(renderer.cameraColorTargetHandle,renderingData);//可以理解为传入GameView_RenderTarget的句柄和相机渲染数据（相机渲染数据用于创建TempRT）
+        m_ScriptablePass.Setup(renderer.cameraColorTargetHandle);//可以理解为传入GameView_RenderTarget的句柄和相机渲染数据（相机渲染数据用于创建TempRT）
     }
     
     protected override void Dispose(bool disposing)

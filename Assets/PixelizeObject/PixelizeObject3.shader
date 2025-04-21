@@ -4,8 +4,12 @@ Shader "URP/Cartoon/PixelizeObject3"
     {
        [Header(Tint)]
         _BaseColor("Base Color",Color) = (1.0,1.0,1.0,1.0)
-        
         _MainTex("MainTex",2D) = "white"{}
+    	
+    	[Header(Emission)]
+    	[Toggle(_EMISSION)]_EMISSION("Enable Emission",int) = 0
+    	[HDR] _EmissionColor("Color", Color) = (0,0,0)
+    	_EmissionMap("Emission", 2D) = "white" {}
         
         [Header(MatCap)]
         _MatCap("Mat Cap",2D) = "white"{}
@@ -26,6 +30,8 @@ Shader "URP/Cartoon/PixelizeObject3"
         _NormalInlineColor("Normal Inline Color",Color) = (1.0,1.0,1.0,1.0)
     	[Toggle(_EnableNormalOutline)] _EnableNormalOutline("Enable Normal Outline",float) = 0
         _NormalOutlineColor("Normal Outline Color",Color) = (1.0,1.0,1.0,1.0)
+    	
+    	[Header(Inline)]
     	
     	[Header(DownSample)]
     	[IntRange]_DownSampleValue("Down Sample Value",Range(0,5)) = 0
@@ -49,6 +55,7 @@ Shader "URP/Cartoon/PixelizeObject3"
          #pragma shader_feature _EnableObjectCenterPoint
          #pragma shader_feature _EnableNormalInline
         #pragma shader_feature _EnableNormalOutline
+         #pragma shader_feature _EMISSION
          
          CBUFFER_START(UnityPerMaterial)
             //----------变量声明开始-----------
@@ -66,6 +73,9 @@ Shader "URP/Cartoon/PixelizeObject3"
 			half4 _NormalInlineColor;
             half4 _NormalOutlineColor;
 
+			half3 _EmissionColor;
+			float4 _EmissionMap_ST;
+
 			int _ID;
             //----------变量声明结束-----------
             CBUFFER_END
@@ -77,6 +87,10 @@ Shader "URP/Cartoon/PixelizeObject3"
          
          TEXTURE2D(_PixelizeObjectMask);
          TEXTURE2D(_PixelizeObjectCartoonTex);
+
+         TEXTURE2D(_EmissionMap);
+         SAMPLER(sampler_EmissionMap);
+         
 
         //Remap
         float remap(float original_value, float original_min, float original_max, float new_min, float new_max)
@@ -115,6 +129,7 @@ Shader "URP/Cartoon/PixelizeObject3"
         //解决深度引动模式Depth Priming Mode问题
         //UsePass "Universal Render Pipeline/Lit/DepthNormals"
         
+       //Normal Pass
         Pass
         {
         	Name "CustomNormalsPass"
@@ -311,6 +326,48 @@ Shader "URP/Cartoon/PixelizeObject3"
 			}
             ENDHLSL
         }
+
+		// shadow casting pass
+		Pass
+		{
+			Tags{ "LightMode" = "ShadowCaster" }
+
+			ZWrite On
+			ZTest LEqual
+
+			HLSLPROGRAM
+
+			 #pragma vertex vert
+			#pragma fragment frag
+			
+			#pragma target 4.6
+
+			 struct vertexInput
+            {
+                float4 vertex : POSITION;
+        		float3 color : COLOR;
+            };
+
+            struct vertexOutput
+            {
+                float4 pos : SV_POSITION;
+            };
+
+            vertexOutput vert (vertexInput v)
+            {
+                vertexOutput o;
+            	float4 posCS = TransformObjectToHClip(v.vertex.xyz+v.color* _OutlineWidth * 0.1);
+                o.pos = posCS;
+                return o;
+            }
+
+            float4 frag (vertexOutput i) : SV_TARGET
+            {
+            	return 1;
+            }
+
+			ENDHLSL
+		}
         
         //Cartoon Rendering
         Pass
@@ -373,7 +430,7 @@ Shader "URP/Cartoon/PixelizeObject3"
             	float4 posCS = TransformObjectToHClip(v.vertex.xyz);
                 o.pos = posCS;
                 o.nDirWS = TransformObjectToWorldNormal(v.normal);
-                o.uv = v.uv*_MainTex_ST.xy+_MainTex_ST.zw;
+                o.uv = v.uv;
                 float3 positionWS = TransformObjectToWorld(v.vertex.xyz);
                 o.posWS = positionWS;
             	o.screenPos = ComputeScreenPos(posCS);
@@ -385,7 +442,7 @@ Shader "URP/Cartoon/PixelizeObject3"
                 float nDotl = dot(nDir,lDir);
                 float lambert = max(0,nDotl);
                 float halfLambert = nDotl*0.5+0.5;
-                half3 result = halfLambert*shadow*lightRadience;
+                half3 result = halfLambert*lightRadience*lerp(0.5,1,shadow);
                 return result;
             }
             
@@ -405,7 +462,7 @@ Shader "URP/Cartoon/PixelizeObject3"
 
                 half4 mainTex = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,i.uv*_MainTex_ST.xy+_MainTex_ST.zw);
                 half4 albedo = _BaseColor*mainTex;
-                
+            	
                 float mainLightRadiance = mainLight.distanceAttenuation;
                 float mainDiffuse = CalculateDiffuseLightResult(nDir,lDir,mainLightRadiance,mainLight.shadowAttenuation);
 
@@ -424,27 +481,7 @@ Shader "URP/Cartoon/PixelizeObject3"
 				}
 
                 float diffuse = mainDiffuse+additionalDiffuse;
-                // float mask1 = 1-smoothstep(0.2-_SmoothValue,0.2,diffuse);
-                // float mask2 = 1-smoothstep(0.41-_SmoothValue,0.41,diffuse);
-                // float mask3 = 1-smoothstep(0.624-_SmoothValue,0.624,diffuse);
-                // float mask4 = 1-smoothstep(0.823-_SmoothValue,0.823,diffuse);
-                // float mask5 = 1-smoothstep(0.965-_SmoothValue,0.965,diffuse);
-                // float mask6 = 1 - mask5;
-                // mask2 = mask2 -mask1;
-                // mask3 = mask3 -mask2-mask1;
-                // mask4 = mask4 -mask3 - mask2 -mask1;
-                // mask5 = mask5 - mask4 -mask3 - mask2 -mask1;
-                //
-                //
-                // half3 diffuseColor1 = _BaseColor*albedo*mask1*half3(0.2829f,0.2976f,0.3584f);
-                // half3 diffuseColor2 = _BaseColor*albedo*mask2*half3(0.4024f,0.4244f,0.4811f);
-                // half3 diffuseColor3 = _BaseColor*albedo*mask3*half3(0.4396f,0.4660f,0.5377f);
-                // half3 diffuseColor4 = _BaseColor*albedo*mask4*half3(0.6031f,0.6451f,0.7641f);
-                // half3 diffuseColor5 = _BaseColor*albedo*mask5*half3(0.6776f,0.7272f,0.8584f);
-                // half3 diffuseColor6 = _BaseColor*albedo*mask6;
-                // half3 Diffuse = diffuseColor1+diffuseColor2+diffuseColor3+diffuseColor4+diffuseColor5+diffuseColor6;
-
-            	//return float4(lerp(_DarkLimit,1,ceil(diffuse*_Shades)/_Shades)*_BaseColor.rgb,1.0);
+               
             	float shades = _Shades;
             	float lastValue = saturate(ceil(diffuse*shades-1.0)/shades);
             	float currentValue = saturate(ceil(diffuse*shades)/shades);
@@ -454,10 +491,8 @@ Shader "URP/Cartoon/PixelizeObject3"
             	float newMaxValue = currentValue;
             	diffuse = max(limitMinValue,diffuse);
             	diffuse = remap(diffuse,limitMinValue,limtMaxValue,lastValue,newMaxValue);
-            	
-            	//half3 Diffuse = lerp(0.1,1,floor(diffuse*3.0)/3.0)*_BaseColor;
             	float darkLimit = _DarkLimit*rcp(shades);
-            	half3 Diffuse = lerp(darkLimit,1,diffuse)*_BaseColor;
+            	half3 Diffuse = saturate(lerp(darkLimit,1+rcp(shades),diffuse))*albedo;
                 
                 //NormalLine
                 float3 normalLine = SAMPLE_TEXTURE2D(_NormalLineTexture,sampler_NormalLineTexture,screenPos);
@@ -472,7 +507,13 @@ Shader "URP/Cartoon/PixelizeObject3"
                 #ifdef _EnableNormalOutline
                     FinalRGB += normalOutline;
                 #endif
-                
+
+            	//Emission
+            	#ifdef _EMISSION
+            		half3 emissionMap = SAMPLE_TEXTURE2D(_EmissionMap,sampler_EmissionMap,i.uv*_EmissionMap_ST.xy+_EmissionMap_ST.zw)*_EmissionColor;
+            		FinalRGB += emissionMap;
+                #endif
+            	
                 return half4(FinalRGB,1.0);
             }
             
@@ -623,7 +664,7 @@ Shader "URP/Cartoon/PixelizeObject3"
         {
 	        Name "PixelizeObjectPass"
 	        ZWrite On
-        	Tags{"LightMode" = "UniversalForWard"}
+        	Tags{"LightMode" = "UniversalForward"}
 	        
             HLSLPROGRAM
             
@@ -675,7 +716,6 @@ Shader "URP/Cartoon/PixelizeObject3"
             {
             	float vertexRawDepth = input.posCS.z;
             	float2 screenPos = input.screenPos.xy/input.screenPos.w;
-            	
             	float downSampleValue = pow(2,_DownSampleValue);
             	float2 size = floor(_ScreenParams.xy/downSampleValue);
 

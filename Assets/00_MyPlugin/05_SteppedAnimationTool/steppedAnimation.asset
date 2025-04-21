@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: steppedAnimation
   m_EditorClassIdentifier: 
   SourceClips:
-  - {fileID: 7400000, guid: e478120230627b840b6d1d9db23dc3ea, type: 2}
+  - {fileID: -203655887218126122, guid: 5eb7fc5dfed3a1e4b8aa579410e999f3, type: 3}
   FixRotationInterpolations: 1
-  KeyframeMode: 3
-  KeyframeRate: 10
+  KeyframeMode: 0
+  KeyframeRate: 15
   ManualKeyframeTimes: []
   ManualKeyframes: []
   SampleRate: 30
