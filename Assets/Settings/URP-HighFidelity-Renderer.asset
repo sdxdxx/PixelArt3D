@@ -244,7 +244,7 @@ MonoBehaviour:
     renderPassEvent: 300
     layerMask:
       serializedVersion: 2
-      m_Bits: 128
+      m_Bits: 0
 --- !u!114 &7492802391736733368
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -261,7 +261,7 @@ MonoBehaviour:
   settings:
     layerMask:
       serializedVersion: 2
-      m_Bits: 64
+      m_Bits: 65
 --- !u!114 &8379536176570051700
 MonoBehaviour:
   m_ObjectHideFlags: 0

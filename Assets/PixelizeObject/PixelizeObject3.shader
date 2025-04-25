@@ -21,7 +21,7 @@ Shader "URP/Cartoon/PixelizeObject3"
         _SmoothValue("Smooth Value",Range(0,0.1)) = 0
        
         [Header(Outline)]
-        _OutlineColor("Outline Color",Color) = (0.0,0.0,0.0,0.0)
+        _OutlineColor("Outline Color",Color) = (0.0,0.0,0.0,1.0)
         _OutlineWidth("Outline Width",Range(0,5)) = 0
     	[IntRange]_ID("Mask ID", Range(0,254)) = 100
     	
@@ -32,6 +32,9 @@ Shader "URP/Cartoon/PixelizeObject3"
         _NormalOutlineColor("Normal Outline Color",Color) = (1.0,1.0,1.0,1.0)
     	
     	[Header(Inline)]
+    	[Toggle(_EnableInline)] _EnableInline("Enable Inline",float) = 0
+    	_InlineColor("Inline Color",Color) = (0,0,0,1.0)
+    	[IntRange]_InlinePixelWidth("InlinePixel",Range(0,5)) = 0
     	
     	[Header(DownSample)]
     	[IntRange]_DownSampleValue("Down Sample Value",Range(0,5)) = 0
@@ -56,6 +59,7 @@ Shader "URP/Cartoon/PixelizeObject3"
          #pragma shader_feature _EnableNormalInline
         #pragma shader_feature _EnableNormalOutline
          #pragma shader_feature _EMISSION
+         #pragma shader_feature _EnableInline
          
          CBUFFER_START(UnityPerMaterial)
             //----------变量声明开始-----------
@@ -68,7 +72,11 @@ Shader "URP/Cartoon/PixelizeObject3"
 
 			int _DownSampleValue;
 
+			half4 _OutlineColor;
 			float _OutlineWidth;
+
+			float _InlinePixelWidth;
+			half4 _InlineColor;
 
 			half4 _NormalInlineColor;
             half4 _NormalOutlineColor;
@@ -123,6 +131,32 @@ Shader "URP/Cartoon/PixelizeObject3"
                 }
                 return 0;
             }
+
+         float CalculateInlineRange(float3 originPoint, float2 screenPos, float2 size, float rawDepth, float inlinePixel)
+        {
+	        float2 bias[4] = {float2(0.0,-inlinePixel),float2(0.0,inlinePixel),float2(inlinePixel,0.0),float2(-inlinePixel,0.0)};
+            float4 pixelizeObjectParam = SAMPLE_TEXTURE2D(_PixelizeObjectMask,sampler_PointClamp,screenPos);
+            float pixelizeObjectParamMask = step(pixelizeObjectParam.a,1-0.000001f);
+	        float4 worldOriginToScreenPos1= ComputeScreenPos(TransformWorldToHClip(originPoint));
+	        float2 worldOriginToScreenPos2= worldOriginToScreenPos1.xy/worldOriginToScreenPos1.w;
+            UNITY_LOOP
+            for (int i =0; i<4; i++)
+            {
+                float2 realSampleUV = (floor((screenPos-worldOriginToScreenPos2)*size)+0.5+bias[i])/size+worldOriginToScreenPos2;
+                float realRawDepth = SAMPLE_TEXTURE2D(_m_CameraDepthTexture,sampler_PointClamp,realSampleUV);
+                float4 realPixelizeObjectParam = SAMPLE_TEXTURE2D(_PixelizeObjectMask,sampler_PointClamp,realSampleUV);
+                float realRawMask = step(realPixelizeObjectParam.a*255,_ID+0.5f)*step(_ID-0.5f,realPixelizeObjectParam.a*255);
+                float rawMask = step(realPixelizeObjectParam.a,1-0.000001f);
+                float temp = step(rawDepth,realPixelizeObjectParam.r)*(rawMask - realRawMask)*pixelizeObjectParamMask;
+                float realMask = max(temp,realRawMask);
+                
+                if (realMask<0.1)
+                {
+                    return 1;
+                }
+            }
+        	return 0;
+        }
          
          ENDHLSL
          
@@ -356,7 +390,7 @@ Shader "URP/Cartoon/PixelizeObject3"
             vertexOutput vert (vertexInput v)
             {
                 vertexOutput o;
-            	float4 posCS = TransformObjectToHClip(v.vertex.xyz+v.color* _OutlineWidth * 0.1);
+            	float4 posCS = TransformObjectToHClip(v.vertex.xyz);
                 o.pos = posCS;
                 return o;
             }
@@ -539,15 +573,6 @@ Shader "URP/Cartoon/PixelizeObject3"
 
             #pragma vertex vert
             #pragma fragment frag
-            
-            //----------贴图声明开始-----------
-            //----------贴图声明结束-----------
-            
-            CBUFFER_START(UnityPerMaterial)
-            //----------变量声明开始-----------
-            half4 _OutlineColor;
-            //----------变量声明结束-----------
-            CBUFFER_END
 
             struct vertexInput
             {
@@ -614,7 +639,6 @@ Shader "URP/Cartoon/PixelizeObject3"
             };
             
             SAMPLER(sampler_PixelizeMask);
-            half4 _OutlineColor;
             
              vertexOutput vert_PixelizeMask (vertexInput v)
             {
@@ -653,7 +677,7 @@ Shader "URP/Cartoon/PixelizeObject3"
 	            */
             	float id = _ID;
             	id = id/255.0;
-            	return float4(rawDepth,_DownSampleValue/5.0,0,id);
+            	return float4(rawDepth,0,0,id);
             }
             
             ENDHLSL
@@ -695,7 +719,6 @@ Shader "URP/Cartoon/PixelizeObject3"
 
             TEXTURE2D(_GrabTexForClearObject);
             TEXTURE2D(_GrabTexForPixelizeObject);
-            half4 _OutlineColor;
             
              vertexOutput vert_Pixelize (vertexInput v)
             {
@@ -717,6 +740,7 @@ Shader "URP/Cartoon/PixelizeObject3"
             	float vertexRawDepth = input.posCS.z;
             	float2 screenPos = input.screenPos.xy/input.screenPos.w;
             	float downSampleValue = pow(2,_DownSampleValue);
+            	
             	float2 size = floor(_ScreenParams.xy/downSampleValue);
 
             	float3 originPoint = float3(0,0,0);
@@ -730,15 +754,13 @@ Shader "URP/Cartoon/PixelizeObject3"
                 float2 realSampleUV = (floor((screenPos-worldOriginToScreenPos2)*size)+0.5)/size+worldOriginToScreenPos2;
             	float4 realPixelizeObjectParam = SAMPLE_TEXTURE2D(_PixelizeObjectMask,sampler_PointClamp,realSampleUV);
             	float realRawMask = step(realPixelizeObjectParam.a*255,_ID+0.5f)*step(_ID-0.5f,realPixelizeObjectParam.a*255);
-            	float rawMask = step(realPixelizeObjectParam.a,1-0.000001f);
-            	float temp = step(vertexRawDepth,realPixelizeObjectParam.r)*(rawMask - realRawMask);
-            	float realMask = max(temp,realRawMask);
+            	
             	float isNotInRange = CalculateIsNotRange(originPoint,screenPos,size, vertexRawDepth);
 	            if (isNotInRange)
 	            {
 		            discard;
 	            }
-
+            	
             	//解决两个像素化物体相交的采样遮罩问题
 	            if (realRawMask<0.5)
 	            {
@@ -771,9 +793,14 @@ Shader "URP/Cartoon/PixelizeObject3"
 		            }
 	            }
             	
-            	 realPixelizeObjectParam = SAMPLE_TEXTURE2D(_PixelizeObjectMask,sampler_PointClamp,realSampleUV);
-            	 realRawMask = step(realPixelizeObjectParam.a*255,_ID+0.5f)*step(_ID-0.5f,realPixelizeObjectParam.a*255);
+            	
             	half3 finalRGB = SAMPLE_TEXTURE2D(_PixelizeObjectCartoonTex,sampler_PointClamp,realSampleUV);
+
+            	#ifdef _EnableInline
+            		float inlineRange =  CalculateInlineRange(originPoint,screenPos,size, vertexRawDepth,1+_InlinePixelWidth);
+            		finalRGB = lerp(finalRGB,_InlineColor,inlineRange);
+            	#endif
+            	
             	half4 result = half4(finalRGB,1.0);
 				return result;
             }
