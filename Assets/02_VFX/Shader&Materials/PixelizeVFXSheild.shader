@@ -10,7 +10,7 @@ Shader "URP/VFX/PixelizeVFXSheild"
     	[Space(20)]
     	
        [Header(Tint)]
-        [HDR]_BaseColor("Base Color",Color) = (1.0,1.0,1.0,1.0)
+        _BaseColor("Base Color",Color) = (1.0,1.0,1.0,1.0)
         _MainTex("MainTex",2D) = "white"{}
     	
     	[Space(20)]
@@ -20,6 +20,10 @@ Shader "URP/VFX/PixelizeVFXSheild"
     	_FresnelIntensity("Fresnel Intensity",Range(0,5)) = 1
     	
     	[Space(20)]
+    	[Header(Dissolve)]
+    	_DissolveEdgeColor("Dissolve Edge Color",Color) = (1.0,1.0,1.0,1.0)
+    	_DissolveNoiseMap("Dissolve Noise Map",2D) = "black"{}
+    	_DissolveEdge("Dissolve Edge",Range(0,0.2)) = 0
     	_DissolveRange("Dissolve Range",Range(0,1)) = 0
     	
     	[Space(20)]
@@ -49,15 +53,19 @@ Shader "URP/VFX/PixelizeVFXSheild"
          CBUFFER_START(UnityPerMaterial)
             //----------变量声明开始-----------
             half4 _BaseColor;
+			half4 _DissolveEdgeColor;
 	        float _FresnelPow;
 	        float _FresnelIntensity;
 			float _DissolveRange;
+			float _DissolveEdge;
             float4 _MainTex_ST;
+            float4 _DissolveNoiseMap_ST;
 			int _DownSampleValue;
 			int _ID;
             //----------变量声明结束-----------
             CBUFFER_END
-         
+
+         TEXTURE2D(_DissolveNoiseMap);
          TEXTURE2D(_m_CameraDepthTexture);
          TEXTURE2D(_PixelizeVFXMask);
          TEXTURE2D(_PixelizeVFXCartoonTex);
@@ -128,7 +136,7 @@ Shader "URP/VFX/PixelizeVFXSheild"
             Tags { "LightMode" = "PixelizeVFXCartoonPass" }
             
             
-            Blend SrcAlpha OneMinusSrcAlpha
+            //Blend SrcAlpha OneMinusSrcAlpha
             Cull Back
             
             ZWrite On
@@ -204,9 +212,9 @@ Shader "URP/VFX/PixelizeVFXSheild"
                 float3 hDir = normalize(lDir+vDir);
             	
                 float nDotv = dot(nDir,vDir);
-
+            	
             	float fresnel = saturate(pow(max(0,1-nDotv),_FresnelPow));
-
+            	
             	half3 finalRGB = fresnel;
             	half finalA = 1-fresnel;
                 return float4(finalRGB,finalA);
@@ -388,11 +396,16 @@ Shader "URP/VFX/PixelizeVFXSheild"
 			            }
 		            }
 	            }
-            	clip(realSampleUV.y-_DissolveRange);
+            	float2 noiseUV = realSampleUV *_DissolveNoiseMap_ST.xy + _DissolveNoiseMap_ST.zw;
+            	float dissolveNoise = SAMPLE_TEXTURE2D(_DissolveNoiseMap,sampler_PointRepeat,noiseUV).r;
+            	float realDisovleRange = _DissolveRange*2;
+            	float alpha = step(realDisovleRange,realSampleUV.y+dissolveNoise);
+            	float stepEdgeTempMask = step(_DissolveRange*2+_DissolveEdge,realSampleUV.y+dissolveNoise);
+            	float edgeMask = alpha - stepEdgeTempMask;
             	float4 pixelizeObjectCartoonTex = SAMPLE_TEXTURE2D(_PixelizeVFXCartoonTex,sampler_PointClamp,realSampleUV);
-            	half3 finalRGB = pixelizeObjectCartoonTex.rgb*_BaseColor.rgb*_FresnelIntensity;
-            	half fianlA = pixelizeObjectCartoonTex.a;
-            	half4 result = half4(finalRGB,1-fianlA);
+            	half3 finalRGB = lerp(pixelizeObjectCartoonTex.rgb*_BaseColor.rgb,_DissolveEdgeColor,edgeMask)*_FresnelIntensity;
+            	half fianlA = (1-pixelizeObjectCartoonTex.a)*alpha;
+            	half4 result = half4(finalRGB,fianlA);
 				return result;
             }
             

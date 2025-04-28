@@ -472,12 +472,12 @@ Shader "URP/Cartoon/PixelizeObject3"
                 return o;
             }
 
-             float CalculateDiffuseLightResult(float3 nDir, float3 lDir, float lightRadience, float shadow)
+             float CalculateDiffuseLightResult(float3 nDir, float3 lDir, float lightRadience)
             {
                 float nDotl = dot(nDir,lDir);
                 float lambert = max(0,nDotl);
                 float halfLambert = nDotl*0.5+0.5;
-                float result = halfLambert*lightRadience*lerp(0.5,1,shadow);
+                float result = halfLambert*lightRadience;//*lerp(0.5,1,shadow);
                 return result;
             }
 
@@ -523,8 +523,9 @@ Shader "URP/Cartoon/PixelizeObject3"
                 half4 albedo = _BaseColor*mainTex;
             	
                 float mainLightRadiance = mainLight.distanceAttenuation;
-                float mainDiffuse = CalculateDiffuseLightResult(nDir,lDir,mainLightRadiance,mainLight.shadowAttenuation);
-            	half3 MainDiffuse = CalculateMainShades(mainDiffuse,_Shades)*albedo;
+            	float mainShadow = lerp(0.5,1,mainLight.shadowAttenuation);
+                float mainDiffuse = CalculateDiffuseLightResult(nDir,lDir,mainLightRadiance);
+            	half3 MainDiffuse = CalculateMainShades(mainDiffuse,_Shades)*mainShadow*albedo;
 
             	uint lightCount = GetAdditionalLightsCount();
             	half3 AdditionalDiffuse = half3(0,0,0);
