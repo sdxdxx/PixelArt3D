@@ -120,7 +120,7 @@ public class PixelizeObject : ScriptableRendererFeature
         }
     }
     
-        //Pixelize VFX Mask Pass
+    //Pixelize VFX Mask Pass
     class PixelizeVFXMaskPass : ScriptableRenderPass
     {
         private RenderingData renderingData;
@@ -244,7 +244,7 @@ public class PixelizeObject : ScriptableRendererFeature
         //自定义Pass的构造函数(用于传参)
         public PixelizeObjectCartoonPass(Settings settings)
         {
-            filtering = new FilteringSettings(RenderQueueRange.all);//设置过滤器
+            filtering = new FilteringSettings(RenderQueueRange.all, settings.layerMask);//设置过滤器
             shaderTagsList.Add(new ShaderTagId("PixelizeObjectCartoonPass"));
             shaderTagsList.Add(new ShaderTagId("PixelizeObjectOutlinePass"));
             renderPassEvent = pixelizeObjectClearCartoonRenderPassEvent;
@@ -349,7 +349,7 @@ public class PixelizeObject : ScriptableRendererFeature
         //自定义Pass的构造函数(用于传参)
         public PixelizeVFXCartoonPass(Settings settings)
         {
-            filtering = new FilteringSettings(RenderQueueRange.all);//设置过滤器
+            filtering = new FilteringSettings(RenderQueueRange.all,settings.layerMask);//设置过滤器
             shaderTagsList.Add(new ShaderTagId("PixelizeVFXCartoonPass"));
             renderPassEvent = pixelizeObjectClearCartoonRenderPassEvent;
         }
@@ -538,36 +538,35 @@ public class PixelizeObject : ScriptableRendererFeature
         }
     }
     
-    
     //-------------------------------------------------------------------------------------------------------
-    private PixelizeObjectCartoonPass pixelizeObjectCartoonPass;
     private PixelizeObjectMaskPass pixelizeObjectMaskPass;
+    private PixelizeObjectCartoonPass pixelizeObjectCartoonPass;
     private PixelizeObjectCartoonForDebugPass_EditorMode pixelizeObjectCartoonPass_EditorMode;
     
-    private PixelizeVFXCartoonPass pixelizeVFXCartoonPass;
     private PixelizeVFXMaskPass pixelizeVFXMaskPass;
+    private PixelizeVFXCartoonPass pixelizeVFXCartoonPass;
     public Settings settings = new Settings();
     
     //初始化时调用
     public override void Create()
     {
-        pixelizeObjectCartoonPass = new PixelizeObjectCartoonPass(settings);
         pixelizeObjectMaskPass = new PixelizeObjectMaskPass(settings);
+        pixelizeObjectCartoonPass = new PixelizeObjectCartoonPass(settings);
         pixelizeObjectCartoonPass_EditorMode = new PixelizeObjectCartoonForDebugPass_EditorMode(settings);
 
-        pixelizeVFXCartoonPass = new PixelizeVFXCartoonPass(settings);
         pixelizeVFXMaskPass = new PixelizeVFXMaskPass(settings);
+        pixelizeVFXCartoonPass = new PixelizeVFXCartoonPass(settings);
     }
     
     //每帧调用,将pass添加进流程
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        renderer.EnqueuePass(pixelizeObjectCartoonPass_EditorMode);
         renderer.EnqueuePass(pixelizeObjectMaskPass);
         renderer.EnqueuePass(pixelizeObjectCartoonPass);
+        renderer.EnqueuePass(pixelizeObjectCartoonPass_EditorMode);
         
-        renderer.EnqueuePass(pixelizeVFXCartoonPass);
         renderer.EnqueuePass(pixelizeVFXMaskPass);
+        renderer.EnqueuePass(pixelizeVFXCartoonPass);
     }
 
     //每帧调用,渲染目标初始化后的回调。这允许在创建并准备好目标后从渲染器访问目标
@@ -577,20 +576,20 @@ public class PixelizeObject : ScriptableRendererFeature
         pixelizeObjectCartoonPass.Setup(renderer.cameraColorTargetHandle,renderingData);
         pixelizeObjectCartoonPass_EditorMode.Setup(renderer.cameraColorTargetHandle,renderingData);
         
-        pixelizeVFXCartoonPass.Setup(renderer.cameraColorTargetHandle,renderingData);
         pixelizeVFXMaskPass.Setup(renderer.cameraColorTargetHandle,renderingData);
+        pixelizeVFXCartoonPass.Setup(renderer.cameraColorTargetHandle,renderingData);
     }
     
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
         
-        pixelizeObjectCartoonPass.OnDispose();
         pixelizeObjectMaskPass.OnDispose();
+        pixelizeObjectCartoonPass.OnDispose();
         pixelizeObjectCartoonPass_EditorMode.OnDispose();
         
-        pixelizeVFXCartoonPass.OnDispose();
         pixelizeVFXMaskPass.OnDispose();
+        pixelizeVFXCartoonPass.OnDispose();
     }
 }
 
