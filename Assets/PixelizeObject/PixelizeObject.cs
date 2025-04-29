@@ -23,8 +23,8 @@ public class PixelizeObject : ScriptableRendererFeature
         private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         
         //定义一个 ProfilingSampler 方便设置在FrameDebugger里查看
-        private const string ProfilerTag = "PixelizeObjectMaskPass";
-        private ProfilingSampler m_ProfilingSampler = new("PixelizeObjectMask");
+        private const string ProfilerTag = "Pixelize Object Mask Pass";
+        private ProfilingSampler m_ProfilingSampler = new("Pixelize Object Mask");
         
         private RTHandle cameraColorRTHandle;//可以理解为GameView_RenderTarget的句柄
         private RTHandle depthTarget;
@@ -233,8 +233,8 @@ public class PixelizeObject : ScriptableRendererFeature
         private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         
         //定义一个 ProfilingSampler 方便设置在FrameDebugger里查看
-        private const string ProfilerTag = "PixelizeObjectCartoonPass";
-        private ProfilingSampler m_ProfilingSampler = new("PixelizeObjectCartoonPass");
+        private const string ProfilerTag = "Pixelize Object Cartoon Pass";
+        private ProfilingSampler m_ProfilingSampler = new("Pixelize Object Cartoon Pass");
         
 
         private RTHandle cameraColorRTHandle;
@@ -442,8 +442,8 @@ public class PixelizeObject : ScriptableRendererFeature
         private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         
         //定义一个 ProfilingSampler 方便设置在FrameDebugger里查看
-        private const string ProfilerTag = "PixelizeObjectCartoonPass_EditorMode";
-        private ProfilingSampler m_ProfilingSampler = new("PixelizeObjectCartoonPass_EditorMode");
+        private const string ProfilerTag = "Pixelize Object Cartoon Pass_EditorMode";
+        private ProfilingSampler m_ProfilingSampler = new("Pixelize Object Cartoon Pass_EditorMode");
         
 
         private RTHandle cameraColorRTHandle;
