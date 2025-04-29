@@ -46,7 +46,6 @@ public class PixelizeObject : ScriptableRendererFeature
             if (desc.msaaSamples>1)
             {
                 desc.bindMS = true;
-                desc.msaaSamples = 2;
             }
             else
             {
@@ -258,7 +257,6 @@ public class PixelizeObject : ScriptableRendererFeature
             if (desc.msaaSamples>1)
             {
                 desc.bindMS = true;
-                desc.msaaSamples = 2;
             }
             else
             {
@@ -330,7 +328,7 @@ public class PixelizeObject : ScriptableRendererFeature
         }
     }
     
-    //PixelizeObjectCartoonPass
+    //PixelizeVFXCartoonPass
     class PixelizeVFXCartoonPass : ScriptableRenderPass
     {
         private RenderingData renderingData;
@@ -362,7 +360,6 @@ public class PixelizeObject : ScriptableRendererFeature
             if (desc.msaaSamples>1)
             {
                 desc.bindMS = true;
-                desc.msaaSamples = 2;
             }
             else
             {
@@ -467,7 +464,6 @@ public class PixelizeObject : ScriptableRendererFeature
             if (desc.msaaSamples>1)
             {
                 desc.bindMS = true;
-                desc.msaaSamples = 2;
             }
             else
             {
