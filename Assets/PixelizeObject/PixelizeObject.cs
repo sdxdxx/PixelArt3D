@@ -92,9 +92,6 @@ public class PixelizeObject : ScriptableRendererFeature
                 //确保执行前清空
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
-                var depthParams = new RenderStateBlock(RenderStateMask.Depth);
-                DepthState depthState = new DepthState(writeEnabled: true, CompareFunction.LessEqual);
-                depthParams.depthState = depthState;
             
                 SortingCriteria sortingCriteria = SortingCriteria.CommonOpaque;
                 var draw = CreateDrawingSettings(shaderTagsList, ref renderingData, sortingCriteria);
@@ -197,9 +194,6 @@ public class PixelizeObject : ScriptableRendererFeature
                 //确保执行前清空
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
-                var depthParams = new RenderStateBlock(RenderStateMask.Depth);
-                DepthState depthState = new DepthState(writeEnabled: true, CompareFunction.LessEqual);
-                depthParams.depthState = depthState;
             
                 SortingCriteria sortingCriteria = SortingCriteria.CommonOpaque;
                 var draw = CreateDrawingSettings(shaderTagsList, ref renderingData, sortingCriteria);
@@ -303,6 +297,7 @@ public class PixelizeObject : ScriptableRendererFeature
                 //确保执行前清空
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
+                
                 SortingCriteria sortingCriteria = SortingCriteria.CommonOpaque;
                 var draw = CreateDrawingSettings(shaderTagsList, ref renderingData, sortingCriteria);
                 context.DrawRenderers(renderingData.cullResults, ref draw, ref filtering);
