@@ -13,9 +13,8 @@ public class PixelizeObject : ScriptableRendererFeature
     }
     private static readonly RenderPassEvent pixelizeObjectMaskPassEvent = RenderPassEvent.AfterRenderingPrePasses;
     private static readonly RenderPassEvent pixelizeObjectClearCartoonRenderPassEvent = RenderPassEvent.AfterRenderingPrePasses;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-     
-    //PixelizeObjectMaskPass
+    
+    //Pixelize Object Mask Pass
     class PixelizeObjectMaskPass : ScriptableRenderPass
     {
         FilteringSettings filtering;
@@ -23,9 +22,10 @@ public class PixelizeObject : ScriptableRendererFeature
         
         //定义一个 ProfilingSampler 方便设置在FrameDebugger里查看
         private const string ProfilerTag = "Pixelize Object Mask Pass";
-        private ProfilingSampler m_ProfilingSampler = new("Pixelize Object Mask");
+        private ProfilingSampler m_ProfilingSampler = new("Pixelize Object Mask Pass");
         
-        private RTHandle cameraColorRTHandle;//可以理解为GameView_RenderTarget的句柄
+
+        private RTHandle cameraColorRTHandle;
         private RTHandle depthTarget;
         private RTHandle maskRTHandle;
 
@@ -36,7 +36,7 @@ public class PixelizeObject : ScriptableRendererFeature
             shaderTagsList.Add(new ShaderTagId("PixelizeObjectMaskPass"));
             renderPassEvent = pixelizeObjectMaskPassEvent;
         }
-        
+
         public void GetDepthTempRT(ref RTHandle temp, in RenderingData data)
         {
             RenderTextureDescriptor desc = data.cameraData.cameraTargetDescriptor;
@@ -71,7 +71,6 @@ public class PixelizeObject : ScriptableRendererFeature
         //此方法由渲染器在渲染相机之前调用
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
-            //depthTarget = renderingData.cameraData.renderer.cameraDepthTargetHandle;
             GetDepthTempRT(ref depthTarget,renderingData);
             ConfigureInput(ScriptableRenderPassInput.Color); //确认传入的参数类型为Color
             GetTempRT(ref maskRTHandle,renderingData);
@@ -82,6 +81,7 @@ public class PixelizeObject : ScriptableRendererFeature
         //执行传递。这是自定义渲染发生的地方
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
+            
             CommandBuffer cmd = CommandBufferPool.Get(ProfilerTag);//获得一个为ProfilerTag的CommandBuffer
             
             //性能分析器(自带隐式垃圾回收),之后可以在FrameDebugger中查看
@@ -90,12 +90,14 @@ public class PixelizeObject : ScriptableRendererFeature
                 //确保执行前清空
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
-            
+                
                 SortingCriteria sortingCriteria = SortingCriteria.CommonOpaque;
                 var draw = CreateDrawingSettings(shaderTagsList, ref renderingData, sortingCriteria);
                 context.DrawRenderers(renderingData.cullResults, ref draw, ref filtering);
             }
+            
             cmd.SetGlobalTexture("_PixelizeObjectMask",maskRTHandle);
+            
             context.ExecuteCommandBuffer(cmd);//执行CommandBuffer
             cmd.Clear();
             CommandBufferPool.Release(cmd);//释放CommandBuffer
@@ -122,9 +124,9 @@ public class PixelizeObject : ScriptableRendererFeature
         
         //定义一个 ProfilingSampler 方便设置在FrameDebugger里查看
         private const string ProfilerTag = "Pixelize VFX Mask Pass";
-        private ProfilingSampler m_ProfilingSampler = new("Pixelize VFX Mask");
+        private ProfilingSampler m_ProfilingSampler = new("Pixelize VFX Mask Pass");
         
-        private RTHandle cameraColorRTHandle;//可以理解为GameView_RenderTarget的句柄
+        private RTHandle cameraColorRTHandle;
         private RTHandle depthTarget;
         private RTHandle maskRTHandle;
 
@@ -135,7 +137,7 @@ public class PixelizeObject : ScriptableRendererFeature
             shaderTagsList.Add(new ShaderTagId("PixelizeVFXMaskPass"));
             renderPassEvent = pixelizeObjectMaskPassEvent;
         }
-        
+
         public void GetDepthTempRT(ref RTHandle temp, in RenderingData data)
         {
             RenderTextureDescriptor desc = data.cameraData.cameraTargetDescriptor;
@@ -144,7 +146,6 @@ public class PixelizeObject : ScriptableRendererFeature
             if (desc.msaaSamples>1)
             {
                 desc.bindMS = true;
-                desc.msaaSamples = 2;
             }
             else
             {
@@ -171,7 +172,6 @@ public class PixelizeObject : ScriptableRendererFeature
         //此方法由渲染器在渲染相机之前调用
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
-            //depthTarget = renderingData.cameraData.renderer.cameraDepthTargetHandle;
             GetDepthTempRT(ref depthTarget,renderingData);
             ConfigureInput(ScriptableRenderPassInput.Color); //确认传入的参数类型为Color
             GetTempRT(ref maskRTHandle,renderingData);
@@ -182,6 +182,7 @@ public class PixelizeObject : ScriptableRendererFeature
         //执行传递。这是自定义渲染发生的地方
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
+            
             CommandBuffer cmd = CommandBufferPool.Get(ProfilerTag);//获得一个为ProfilerTag的CommandBuffer
             
             //性能分析器(自带隐式垃圾回收),之后可以在FrameDebugger中查看
@@ -190,12 +191,14 @@ public class PixelizeObject : ScriptableRendererFeature
                 //确保执行前清空
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
-            
+                
                 SortingCriteria sortingCriteria = SortingCriteria.CommonOpaque;
                 var draw = CreateDrawingSettings(shaderTagsList, ref renderingData, sortingCriteria);
                 context.DrawRenderers(renderingData.cullResults, ref draw, ref filtering);
             }
+            
             cmd.SetGlobalTexture("_PixelizeVFXMask",maskRTHandle);
+            
             context.ExecuteCommandBuffer(cmd);//执行CommandBuffer
             cmd.Clear();
             CommandBufferPool.Release(cmd);//释放CommandBuffer
