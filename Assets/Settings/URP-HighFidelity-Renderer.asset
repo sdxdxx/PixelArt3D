@@ -115,13 +115,13 @@ MonoBehaviour:
   - {fileID: -1878332245247344467}
   - {fileID: 1796558858774977381}
   - {fileID: -5245646984651060028}
+  - {fileID: 8379536176570051700}
   - {fileID: 7492802391736733368}
   - {fileID: -1803108753100917420}
-  - {fileID: 8379536176570051700}
   - {fileID: -7019186444496687000}
   - {fileID: 6162794624292410295}
   - {fileID: 5873408447755618239}
-  m_RendererFeatureMap: adc0de57c6d2eee5651b5d73c3a8ee18c44cc62edcb733b7b84eaaa313c8fb6754b505702412fae6742cfe82c1174a7468b089331ed7969eb7d3a2140fa58655bf874055dd898251
+  m_RendererFeatureMap: adc0de57c6d2eee5651b5d73c3a8ee18c44cc62edcb733b7742cfe82c1174a74b84eaaa313c8fb6754b505702412fae668b089331ed7969eb7d3a2140fa58655bf874055dd898251
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
@@ -276,4 +276,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   settings:
-    renderPassEvent: 220
+    renderPassEvent: 200
