@@ -18,7 +18,6 @@ public class PixelizeObject : ScriptableRendererFeature
     //PixelizeObjectMaskPass
     class PixelizeObjectMaskPass : ScriptableRenderPass
     {
-        private RenderingData renderingData;
         FilteringSettings filtering;
         private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         
@@ -64,19 +63,18 @@ public class PixelizeObject : ScriptableRendererFeature
             RenderingUtils.ReAllocateIfNeeded(ref temp, desc);//使用该函数申请一张与相机大小一致的TempRT;
         }
 
-        public void Setup(RTHandle cameraColor, RenderingData data)
+        public void Setup(RTHandle cameraColor)
         {
             cameraColorRTHandle = cameraColor;
-            renderingData = data;
         }
         
         //此方法由渲染器在渲染相机之前调用
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
             //depthTarget = renderingData.cameraData.renderer.cameraDepthTargetHandle;
-            GetDepthTempRT(ref depthTarget,this.renderingData);
+            GetDepthTempRT(ref depthTarget,renderingData);
             ConfigureInput(ScriptableRenderPassInput.Color); //确认传入的参数类型为Color
-            GetTempRT(ref maskRTHandle,this.renderingData);
+            GetTempRT(ref maskRTHandle,renderingData);
             ConfigureTarget(maskRTHandle,depthTarget);
             ConfigureClear(ClearFlag.All, Color.black);
         }
@@ -119,7 +117,6 @@ public class PixelizeObject : ScriptableRendererFeature
     //Pixelize VFX Mask Pass
     class PixelizeVFXMaskPass : ScriptableRenderPass
     {
-        private RenderingData renderingData;
         FilteringSettings filtering;
         private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         
@@ -166,19 +163,18 @@ public class PixelizeObject : ScriptableRendererFeature
             RenderingUtils.ReAllocateIfNeeded(ref temp, desc);//使用该函数申请一张与相机大小一致的TempRT;
         }
 
-        public void Setup(RTHandle cameraColor, RenderingData data)
+        public void Setup(RTHandle cameraColor)
         {
             cameraColorRTHandle = cameraColor;
-            renderingData = data;
         }
         
         //此方法由渲染器在渲染相机之前调用
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
             //depthTarget = renderingData.cameraData.renderer.cameraDepthTargetHandle;
-            GetDepthTempRT(ref depthTarget,this.renderingData);
+            GetDepthTempRT(ref depthTarget,renderingData);
             ConfigureInput(ScriptableRenderPassInput.Color); //确认传入的参数类型为Color
-            GetTempRT(ref maskRTHandle,this.renderingData);
+            GetTempRT(ref maskRTHandle,renderingData);
             ConfigureTarget(maskRTHandle,depthTarget);
             ConfigureClear(ClearFlag.All, Color.black);
         }
@@ -221,7 +217,6 @@ public class PixelizeObject : ScriptableRendererFeature
     //PixelizeObjectCartoonPass
     class PixelizeObjectCartoonPass : ScriptableRenderPass
     {
-        private RenderingData renderingData;
         FilteringSettings filtering;
         private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         
@@ -269,10 +264,9 @@ public class PixelizeObject : ScriptableRendererFeature
             RenderingUtils.ReAllocateIfNeeded(ref temp, desc);//使用该函数申请一张与相机大小一致的TempRT;
         }
 
-        public void Setup(RTHandle cameraColor, RenderingData data)
+        public void Setup(RTHandle cameraColor)
         {
             cameraColorRTHandle = cameraColor;
-            renderingData = data;
         }
         
         //此方法由渲染器在渲染相机之前调用
@@ -326,7 +320,6 @@ public class PixelizeObject : ScriptableRendererFeature
     //PixelizeVFXCartoonPass
     class PixelizeVFXCartoonPass : ScriptableRenderPass
     {
-        private RenderingData renderingData;
         FilteringSettings filtering;
         private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         
@@ -373,10 +366,9 @@ public class PixelizeObject : ScriptableRendererFeature
             RenderingUtils.ReAllocateIfNeeded(ref temp, desc);//使用该函数申请一张与相机大小一致的TempRT;
         }
 
-        public void Setup(RTHandle cameraColor, RenderingData data)
+        public void Setup(RTHandle cameraColor)
         {
             cameraColorRTHandle = cameraColor;
-            renderingData = data;
         }
         
         //此方法由渲染器在渲染相机之前调用
@@ -429,7 +421,6 @@ public class PixelizeObject : ScriptableRendererFeature
     //PixelizeObjectCartoonOutlinePass_EditorMode
     class PixelizeObjectCartoonForDebugPass_EditorMode : ScriptableRenderPass
     {
-        private RenderingData renderingData;
         FilteringSettings filtering;
         private List<ShaderTagId> shaderTagsList = new List<ShaderTagId>();
         
@@ -477,10 +468,9 @@ public class PixelizeObject : ScriptableRendererFeature
             RenderingUtils.ReAllocateIfNeeded(ref temp, desc);//使用该函数申请一张与相机大小一致的TempRT;
         }
 
-        public void Setup(RTHandle cameraColor, RenderingData data)
+        public void Setup(RTHandle cameraColor)
         {
             cameraColorRTHandle = cameraColor;
-            renderingData = data;
         }
         
         //此方法由渲染器在渲染相机之前调用
@@ -493,7 +483,7 @@ public class PixelizeObject : ScriptableRendererFeature
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
 
-             if (this.renderingData.cameraData.cameraType == CameraType.Game)
+             if (renderingData.cameraData.cameraType == CameraType.Game)
              {
                  return;
              }
@@ -563,12 +553,12 @@ public class PixelizeObject : ScriptableRendererFeature
     //每帧调用,渲染目标初始化后的回调。这允许在创建并准备好目标后从渲染器访问目标
     public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
     {
-        pixelizeObjectMaskPass.Setup(renderer.cameraColorTargetHandle,renderingData);//可以理解为传入GameView_RenderTarget的句柄和相机渲染数据（相机渲染数据用于创建TempRT）
-        pixelizeObjectCartoonPass.Setup(renderer.cameraColorTargetHandle,renderingData);
-        pixelizeObjectCartoonPass_EditorMode.Setup(renderer.cameraColorTargetHandle,renderingData);
+        pixelizeObjectMaskPass.Setup(renderer.cameraColorTargetHandle);//可以理解为传入GameView_RenderTarget的句柄和相机渲染数据（相机渲染数据用于创建TempRT）
+        pixelizeObjectCartoonPass.Setup(renderer.cameraColorTargetHandle);
+        pixelizeObjectCartoonPass_EditorMode.Setup(renderer.cameraColorTargetHandle);
         
-        pixelizeVFXMaskPass.Setup(renderer.cameraColorTargetHandle,renderingData);
-        pixelizeVFXCartoonPass.Setup(renderer.cameraColorTargetHandle,renderingData);
+        pixelizeVFXMaskPass.Setup(renderer.cameraColorTargetHandle);
+        pixelizeVFXCartoonPass.Setup(renderer.cameraColorTargetHandle);
     }
     
     protected override void Dispose(bool disposing)
