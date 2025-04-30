@@ -28,6 +28,7 @@ Material:
   - _EMISSION
   - _EnableInline
   - _EnableObjectCenterPoint
+  - _EnableShadow
   m_InvalidKeywords: []
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
@@ -119,6 +120,7 @@ Material:
     - _EnableNormalInline: 0
     - _EnableNormalOutline: 0
     - _EnableObjectCenterPoint: 1
+    - _EnableShadow: 1
     - _EnvironmentReflections: 1
     - _GlossMapScale: 1
     - _Glossiness: 0

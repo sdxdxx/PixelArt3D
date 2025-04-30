@@ -1,4 +1,4 @@
-Shader "URP/Cartoon/PixelizeObject3"
+Shader "URP/Cartoon/PixelizeObject3_NonShadow"
 {
     Properties
     {
@@ -22,11 +22,6 @@ Shader "URP/Cartoon/PixelizeObject3"
     	_AdditionalLightBlendIntensity("Additional Light Blend Intensity",Range(0,1)) = 1
     	_AdditionalLightRange("Additional Light Range",Range(0,25)) = 1
        
-        [Header(Outline)]
-        _OutlineColor("Outline Color",Color) = (0.0,0.0,0.0,1.0)
-        _OutlineWidth("Outline Width",Range(0,5)) = 0
-    	
-    	
     	[Header(Normal Line)]
     	[Toggle(_EnableNormalInline)] _EnableNormalInline("Enable Normal Inline",float) = 0
         _NormalInlineColor("Normal Inline Color",Color) = (1.0,1.0,1.0,1.0)
@@ -75,10 +70,7 @@ Shader "URP/Cartoon/PixelizeObject3"
             float4 _MainTex_ST;
 
 			int _DownSampleValue;
-
-			half4 _OutlineColor;
-			float _OutlineWidth;
-
+         
 			float _InlinePixelWidth;
 			half4 _InlineColor;
 
@@ -205,7 +197,7 @@ Shader "URP/Cartoon/PixelizeObject3"
             vertexOutput vert (vertexInput v)
             {
                 vertexOutput o;
-            	float4 posCS = TransformObjectToHClip(v.vertex.xyz+v.color* _OutlineWidth * 0.1);
+            	float4 posCS = TransformObjectToHClip(v.vertex.xyz);
                 o.pos = posCS;
                 o.nDirWS = normalize(TransformObjectToWorldNormal(v.normal));
                 o.uv = v.uv;
@@ -319,7 +311,7 @@ Shader "URP/Cartoon/PixelizeObject3"
 			        output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
 			    #endif
 				
-			    output.positionCS = TransformObjectToHClip(input.position.xyz+input.color* _OutlineWidth * 0.1);
+			    output.positionCS = TransformObjectToHClip(input.position.xyz);
 				output.screenPos = ComputeScreenPos(output.positionCS);
 			    return output;
 			}
@@ -367,48 +359,6 @@ Shader "URP/Cartoon/PixelizeObject3"
 			}
             ENDHLSL
         }
-
-		// shadow casting pass
-		Pass
-		{
-			Tags{ "LightMode" = "ShadowCaster" }
-
-			ZWrite On
-			ZTest LEqual
-
-			HLSLPROGRAM
-
-			 #pragma vertex vert
-			#pragma fragment frag
-			
-			#pragma target 4.6
-
-			 struct vertexInput
-            {
-                float4 vertex : POSITION;
-        		float3 color : COLOR;
-            };
-
-            struct vertexOutput
-            {
-                float4 pos : SV_POSITION;
-            };
-
-            vertexOutput vert (vertexInput v)
-            {
-                vertexOutput o;
-            	float4 posCS = TransformObjectToHClip(v.vertex.xyz);
-                o.pos = posCS;
-                return o;
-            }
-
-            float4 frag (vertexOutput i) : SV_TARGET
-            {
-            	return 1;
-            }
-
-			ENDHLSL
-		}
         
         //Cartoon Rendering
         Pass
@@ -573,56 +523,6 @@ Shader "URP/Cartoon/PixelizeObject3"
             ENDHLSL
         }
         
-        //Outline
-        Pass
-        {
-            Name "Outline"
-            Tags { "LightMode" = "PixelizeObjectOutlinePass" }
-            
-           Stencil
-            {
-                Ref [_ID]
-                Comp NotEqual
-            }
-            
-            ZWrite On
-            Cull Front
-            
-            HLSLPROGRAM
-
-            #pragma vertex vert
-            #pragma fragment frag
-
-            struct vertexInput
-            {
-                float4 vertex : POSITION;
-                float3 normal : NORMAL;
-                float3 color : COLOR;
-            };
-
-            struct vertexOutput
-            {
-                float4 pos : SV_POSITION;
-                float3 nDirWS : TEXCOORD1;
-            };
-
-            vertexOutput vert (vertexInput v)
-            {
-                vertexOutput o;
-                o.pos = TransformObjectToHClip(v.vertex.xyz+v.color* _OutlineWidth * 0.1);
-                o.nDirWS = TransformObjectToWorldNormal(v.color);
-                float3 positionWS = TransformObjectToWorld(v.vertex.xyz);
-                return o;
-            }
-
-            half4 frag (vertexOutput i) : SV_TARGET
-            {
-                return _OutlineColor;
-            }
-            
-            ENDHLSL
-        }
-        
        //PixelizeObjectMask
         Pass
         {
@@ -662,7 +562,6 @@ Shader "URP/Cartoon/PixelizeObject3"
              vertexOutput vert_PixelizeMask (vertexInput v)
             {
                 vertexOutput o;
-            	v.vertex.xyz = v.vertex.xyz+v.color* _OutlineWidth * 0.1;
             	float4 posCS = TransformObjectToHClip(v.vertex.xyz);
             	o.screenPos = ComputeScreenPos(posCS);
                 o.pos = posCS;
@@ -742,7 +641,6 @@ Shader "URP/Cartoon/PixelizeObject3"
              vertexOutput vert_Pixelize (vertexInput v)
             {
                 vertexOutput o;
-            	v.vertex.xyz = v.vertex.xyz+v.color* _OutlineWidth * 0.1;
             	float4 posCS = TransformObjectToHClip(v.vertex.xyz);
             	o.screenPos = ComputeScreenPos(posCS);
                 o.pos = posCS;

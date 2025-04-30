@@ -78,7 +78,7 @@ Shader "URP/PostProcessing/NormalLine"
             half4 frag (Varyings i) : SV_TARGET
             {
                 half4 albedo =  SAMPLE_TEXTURE2D(_BlitTexture, sampler_LinearClamp, i.texcoord);
-                half3 nomralLine = CalculateDepthNormalMapEdge(i.texcoord,2);
+                half3 nomralLine = CalculateDepthNormalMapEdge(i.texcoord,1);
                 float3 nDirWS_00 = SAMPLE_TEXTURE2D(_m_CameraNormalsTexture, sampler_PointClamp, i.texcoord).xyz;
                 half4 result = half4(nomralLine,1.0);
                 return result;

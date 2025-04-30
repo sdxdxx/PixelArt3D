@@ -7,7 +7,7 @@ public class NormalLineRenderFeature : ScriptableRendererFeature
     [System.Serializable]
      public class Settings
      {
-         public RenderPassEvent renderPassEvent = RenderPassEvent.AfterRenderingGbuffer;
+         public RenderPassEvent renderPassEvent = RenderPassEvent.AfterRenderingPrePasses;
      }
      
      //自定义的Pass
