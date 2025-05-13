@@ -70,9 +70,8 @@ public class NormalLineRenderFeature : ScriptableRendererFeature
                 context.ExecuteCommandBuffer(cmd);//执行CommandBuffer
                 cmd.Clear();
                 Blitter.BlitCameraTexture(cmd,tempRTHandle,tempRTHandle,material,0);
-                cmd.SetGlobalTexture("_NormalLineTexture",tempRTHandle);
             }
-            
+            cmd.SetGlobalTexture("_NormalLineTexture",tempRTHandle);
             context.ExecuteCommandBuffer(cmd);//执行CommandBuffer
             cmd.Clear();
             CommandBufferPool.Release(cmd);//释放CommandBuffer

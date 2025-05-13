@@ -149,7 +149,7 @@ Material:
     - _DarkColor: {r: 0, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0.003782485, g: 0.16037738, b: 0.0154074505, a: 1}
     - _GreyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-    - _InlineColor: {r: 0.14117643, g: 0.9607843, b: 0.6444347, a: 1}
+    - _InlineColor: {r: 0.14117643, g: 0.9607843, b: 0.71025866, a: 1}
     - _LightColor: {r: 1, g: 1, b: 1, a: 1}
     - _NormalInlineColor: {r: 0.14117643, g: 0.9607843, b: 0.5524493, a: 1}
     - _NormalOutlineColor: {r: 1024, g: 196.76865, b: 196.76865, a: 1}

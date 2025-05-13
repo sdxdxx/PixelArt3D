@@ -18,7 +18,7 @@ MonoBehaviour:
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   DownSampleValues:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 0
 --- !u!114 &-1597893765548415535
 MonoBehaviour:
   m_ObjectHideFlags: 3

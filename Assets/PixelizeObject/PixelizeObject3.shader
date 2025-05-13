@@ -16,7 +16,7 @@ Shader "URP/Cartoon/PixelizeObject3"
     	[IntRange]_Shades("Shades Value",Range(2,10)) = 3
     	_DarkLimit("Dark Limitation",Range(0,1)) = 0
         _SmoothValue("Smooth Value",Range(0,0.1)) = 0
-    	[IntRange]_ID("Mask ID", Range(0,254)) = 100
+    	[IntRange]_ID("Mask ID", Range(1,255)) = 100
     	
     	[Header(Additional Light)]
     	_AdditionalLightBlendIntensity("Additional Light Blend Intensity",Range(0,1)) = 1
@@ -117,20 +117,19 @@ Shader "URP/Cartoon/PixelizeObject3"
             {
                 float2 bias[4] = {float2(0.0,-1.0),float2(0.0,1.0),float2(1.0,0.0),float2(-1.0,0.0)};
              	float4 pixelizeObjectParam = SAMPLE_TEXTURE2D(_PixelizeObjectMask,sampler_PointClamp,screenPos);
-             	float pixelizeObjectParamMask = step(pixelizeObjectParam.a,1-0.000001f);
+             	float pixelizeObjectParamMask = step(0,pixelizeObjectParam.a);
                 UNITY_LOOP
                 for (int i =0; i<4; i++)
                 {
                     float4 worldOriginToScreenPos1= ComputeScreenPos(TransformWorldToHClip(originPoint));
                     float2 worldOriginToScreenPos2= worldOriginToScreenPos1.xy/worldOriginToScreenPos1.w;
-                    float2 realSampleUV = (floor((screenPos-worldOriginToScreenPos2)*size)+0.5+bias[i])/size+worldOriginToScreenPos2;
+                     float2 realSampleUV = (floor((screenPos-worldOriginToScreenPos2)*size)+0.5+bias[i])/size+worldOriginToScreenPos2;
                 	float realRawDepth = SAMPLE_TEXTURE2D(_m_CameraDepthTexture,sampler_PointClamp,realSampleUV);
                 	float4 realPixelizeObjectParam = SAMPLE_TEXTURE2D(_PixelizeObjectMask,sampler_PointClamp,realSampleUV);
                 	float realRawMask = step(realPixelizeObjectParam.a*255,_ID+0.5f)*step(_ID-0.5f,realPixelizeObjectParam.a*255);
-                	float rawMask = step(realPixelizeObjectParam.a,1-0.000001f);
+                	float rawMask = step(0,pixelizeObjectParam.a);
                 	float temp = step(rawDepth,realPixelizeObjectParam.r)*(rawMask - realRawMask)*pixelizeObjectParamMask;
                 	float realMask = max(temp,realRawMask);
-                	
                     if (realMask<0.1)
                     {
                         return 1;
@@ -757,6 +756,7 @@ Shader "URP/Cartoon/PixelizeObject3"
             half4 frag_Pixelize (vertexOutput input) : SV_TARGET
             {
             	float vertexRawDepth = input.posCS.z;
+            	
             	float2 screenPos = input.screenPos.xy/input.screenPos.w;
             	float downSampleValue = pow(2,_DownSampleValue);
             	
@@ -775,10 +775,13 @@ Shader "URP/Cartoon/PixelizeObject3"
             	float realRawMask = step(realPixelizeObjectParam.a*255,_ID+0.5f)*step(_ID-0.5f,realPixelizeObjectParam.a*255);
             	
             	float isNotInRange = CalculateIsNotRange(originPoint,screenPos,size, vertexRawDepth);
+            	
 	            if (isNotInRange)
 	            {
 		            discard;
 	            }
+
+            	
             	
             	//解决两个像素化物体相交的采样遮罩问题
 	            if (realRawMask<0.5)

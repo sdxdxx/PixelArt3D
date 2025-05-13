@@ -26,6 +26,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _EnableObjectCenterPoint
+  - _EnableShadow
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -113,7 +114,7 @@ Material:
     - _DarkLimit: 0
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
-    - _DownSampleValue: 2
+    - _DownSampleValue: 0
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EMISSION: 0
@@ -121,6 +122,7 @@ Material:
     - _EnableNormalInline: 0
     - _EnableNormalOutline: 0
     - _EnableObjectCenterPoint: 1
+    - _EnableShadow: 1
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
     - _Glossiness: 0
