@@ -21,16 +21,17 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: TestCartoonPixelize 7
-  m_Shader: {fileID: 4800000, guid: ef88450769752f34cbeb7e253006730a, type: 3}
+  m_Shader: {fileID: 4800000, guid: 2b78c6ce6b0de154e8e779306150a95e, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _EnableInline
   - _EnableObjectCenterPoint
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2000
+  m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
   m_LockedProperties: 
@@ -99,6 +100,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AdditionalLightBlendIntensity: 1
+    - _AdditionalLightRange: 1
     - _AlphaClip: 0
     - _AlphaToMask: 0
     - _Blend: 0
@@ -108,12 +111,15 @@ Material:
     - _ClearCoatSmoothness: 0
     - _Cull: 2
     - _Cutoff: 0.5
+    - _DarkLimit: 0.2
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DownSampleBias: 0.35
-    - _DownSampleValue: 4
+    - _DownSampleValue: 3
     - _DstBlend: 0
     - _DstBlendAlpha: 0
+    - _EMISSION: 0
+    - _EnableInline: 1
     - _EnableNormalInline: 0
     - _EnableNormalOutline: 0
     - _EnableObjectCenterPoint: 1
@@ -123,17 +129,19 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _ID: 200
+    - _InlinePixelWidth: 1
     - _InlineWidth: 0
     - _MatCapLerp: 1
     - _Metallic: 0
     - _OcclusionStrength: 1
-    - _OutlineWidth: 1.71
+    - _OutlineWidth: 0
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _RangeDark: 0.2
     - _RangeLight: 0.68
     - _RangeSpecular: 1
     - _ReceiveShadows: 1
+    - _Shades: 6
     - _SmoothDark: 0
     - _SmoothLight: 0
     - _SmoothSpecular: 0.016
@@ -155,6 +163,7 @@ Material:
     - _DarkColor: {r: 0.5031446, g: 0.5031446, b: 0.5031446, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GreyColor: {r: 0.7411765, g: 0.7411765, b: 0.7411765, a: 1}
+    - _InlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _LightColor: {r: 1, g: 1, b: 1, a: 1}
     - _NormalInlineColor: {r: 1, g: 1, b: 1, a: 1}
     - _NormalOutlineColor: {r: 1, g: 1, b: 1, a: 1}

@@ -21,7 +21,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: TestCartoonPixelize 3
-  m_Shader: {fileID: 4800000, guid: 719979a9f2723144f85ade830dd8e11d, type: 3}
+  m_Shader: {fileID: 4800000, guid: 779efe5723646e54ea404637a54dde97, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
@@ -30,7 +30,7 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2000
+  m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
   m_LockedProperties: 
@@ -99,6 +99,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AdditionalLightBlendIntensity: 1
+    - _AdditionalLightRange: 1
     - _AlphaClip: 0
     - _AlphaToMask: 0
     - _Blend: 0
@@ -108,12 +110,17 @@ Material:
     - _ClearCoatSmoothness: 0
     - _Cull: 2
     - _Cutoff: 0.5
+    - _DarkLimit: 0
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DownSampleBias: 0.35
     - _DownSampleValue: 2
     - _DstBlend: 0
     - _DstBlendAlpha: 0
+    - _EMISSION: 0
+    - _EnableInline: 0
+    - _EnableNormalInline: 0
+    - _EnableNormalOutline: 0
     - _EnableObjectCenterPoint: 1
     - _EnableShadow: 0
     - _EnvironmentReflections: 1
@@ -121,6 +128,7 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _ID: 131
+    - _InlinePixelWidth: 0
     - _InlineWidth: 0
     - _MatCapLerp: 1
     - _Metallic: 0
@@ -132,9 +140,11 @@ Material:
     - _RangeLight: 0.68
     - _RangeSpecular: 1
     - _ReceiveShadows: 1
+    - _Shades: 3
     - _SmoothDark: 0.2
     - _SmoothLight: 0.2
     - _SmoothSpecular: 0.016
+    - _SmoothValue: 0
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SobelValue: 0.26
@@ -152,7 +162,10 @@ Material:
     - _DarkColor: {r: 0.5031446, g: 0.5031446, b: 0.5031446, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GreyColor: {r: 0.7411765, g: 0.7411765, b: 0.7411765, a: 1}
+    - _InlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _LightColor: {r: 1, g: 1, b: 1, a: 1}
+    - _NormalInlineColor: {r: 1, g: 1, b: 1, a: 1}
+    - _NormalOutlineColor: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SpecularColor: {r: 1, g: 0.5251572, b: 0.5251572, a: 1}

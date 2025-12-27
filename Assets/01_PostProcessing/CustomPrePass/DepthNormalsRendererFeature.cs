@@ -44,7 +44,6 @@ public class DepthNormalsRendererFeature : ScriptableRendererFeature
             if (desc.msaaSamples>1)
             {
                 desc.bindMS = true;
-                desc.msaaSamples = 2;
             }
             else
             {
@@ -53,8 +52,8 @@ public class DepthNormalsRendererFeature : ScriptableRendererFeature
             }
             
             RenderingUtils.ReAllocateIfNeeded(ref temp, desc);
-            
         }
+        
         public void GetTempRT(ref RTHandle temp, in RenderingData data)
         {
             RenderTextureDescriptor desc = data.cameraData.cameraTargetDescriptor;
@@ -147,7 +146,6 @@ public class DepthNormalsRendererFeature : ScriptableRendererFeature
             if (desc.msaaSamples>1)
             {
                 desc.bindMS = true;
-                desc.msaaSamples = 2;
             }
             else
             {
@@ -156,8 +154,8 @@ public class DepthNormalsRendererFeature : ScriptableRendererFeature
             }
             
             RenderingUtils.ReAllocateIfNeeded(ref temp, desc);
-            
         }
+        
         public void GetTempRT(ref RTHandle temp, in RenderingData data)
         {
             RenderTextureDescriptor desc = data.cameraData.cameraTargetDescriptor;
@@ -170,7 +168,6 @@ public class DepthNormalsRendererFeature : ScriptableRendererFeature
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
             GetDepthTempRT(ref depthTarget, renderingData);
-            //depthTarget = renderingData.cameraData.renderer.cameraDepthTargetHandle;
             ConfigureInput(ScriptableRenderPassInput.Color);
             GetTempRT(ref tempRTHandle, renderingData);//获取与摄像机大小一致的临时RT
             ConfigureTarget(tempRTHandle,depthTarget);
